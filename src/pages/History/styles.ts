@@ -59,8 +59,18 @@ const STATUS_COLORS = {
 } as const;
 
 interface StatusProps {
-  statusColor: keyof typeof STATUS_COLORS;
+  $statusColor: keyof typeof STATUS_COLORS;
 }
+
+/*
+  - ERRO: styled-components: it looks like an unknown prop "statusColor" is being sent through to the DOM, which will likely trigger a React console error. If you would like automatic filtering of unknown props, you can opt-into that behavior via `<StyleSheetManager shouldForwardProp={...}>` (connect an API like `@emotion/is-prop-valid`) or consider using transient props (`$` prefix for automatic filtering.) 
+
+  - Solução foi adicionar um prefixo $ na propriedade: `statusColor` to `$statusColor`
+
+  - Usando dessa forma evita o erro de props desconhecida no DOM.
+
+  - link da solução: https://github.com/rocketseat-education/02-ignite-timer/commit/1ea6d7b#diff-21f4dd2a68b5327188fcd8e98419eb81ef218b9af0e9cedb45cf4b5b267f80a3R74
+*/
 
 export const Status = styled.span<StatusProps>`
   display: flex;
@@ -71,6 +81,6 @@ export const Status = styled.span<StatusProps>`
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 9999px;
-    background: ${(props) => props.theme[STATUS_COLORS[props.statusColor]]};
+    background: ${(props) => props.theme[STATUS_COLORS[props.$statusColor]]};
   }
 `;

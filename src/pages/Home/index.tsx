@@ -2,6 +2,7 @@ import { Play } from "phosphor-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod"; // `* as zod` = because has no a export default
+import { differenceInSeconds } from "date-fns";
 
 import {
   CountdownContainer,
@@ -12,7 +13,7 @@ import {
   StartCountdownButton,
   TaskInput,
 } from "./styles";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // controlled vs uncontrolled
 
@@ -53,12 +54,14 @@ interface Cycle {
   id: string;
   task: string;
   minutesAmount: number;
+  startDate: Date;
   // isActive: boolean
 }
 
 export function Home() {
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [activeCycleId, setActiveCycleId] = useState<string | null>(null);
+  const [amountSecondsPassed, setAmountSecondsPassed] = useState(0);
 
   const { register, handleSubmit, watch, reset /*, formState*/ } =
     useForm<NewCycleFormData>({
@@ -69,24 +72,51 @@ export function Home() {
       },
     });
 
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId);
+  const foundAnActiveCycle = activeCycle !== undefined;
+  // console.log("activeCycle", activeCycle);
+
+  useEffect(() => {
+    if (foundAnActiveCycle) {
+      setInterval(() => {
+        // setAmountSecondsPassed((state) => state + 1); ASSIM NÃO É PRECISO
+        setAmountSecondsPassed(
+          differenceInSeconds(new Date(), activeCycle.startDate)
+        );
+      }, 1000);
+    }
+  }, [activeCycle, foundAnActiveCycle]);
+
   function handleCreateNewCycle(data: NewCycleFormData) {
     const newCycle: Cycle = {
       id: String(new Date().getTime()),
       task: data.task,
       minutesAmount: data.minutesAmount,
+      startDate: new Date(),
     };
 
     // setCycles([...cycles, newCycle]);
     setCycles((state) => [...state, newCycle]); // Clojure no React
     setActiveCycleId(newCycle.id);
 
-    console.log(data);
+    // console.log(data);
     reset();
   }
 
   // console.log(formState.errors);
-  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId);
-  console.log("activeCycle", activeCycle);
+  const totalSeconds = foundAnActiveCycle ? activeCycle.minutesAmount * 60 : 0;
+  const currentSeconds = foundAnActiveCycle
+    ? totalSeconds - amountSecondsPassed
+    : 0;
+
+  const numberOfMinutesToShowOnScreen = String(
+    Math.floor(currentSeconds / 60)
+  ).padStart(2, "0");
+
+  const numberOfSecondsToShowOnScreen = String(currentSeconds % 60).padStart(
+    2,
+    "0"
+  );
 
   const task = watch("task");
   const isSubmitDisabled = !task;
@@ -125,11 +155,11 @@ export function Home() {
         </FormContainer>
 
         <CountdownContainer>
-          <span>0</span>
-          <span>0</span>
+          <span>{numberOfMinutesToShowOnScreen[0]}</span>
+          <span>{numberOfMinutesToShowOnScreen[1]}</span>
           <Separator>:</Separator>
-          <span>0</span>
-          <span>0</span>
+          <span>{numberOfSecondsToShowOnScreen[0]}</span>
+          <span>{numberOfSecondsToShowOnScreen[1]}</span>
         </CountdownContainer>
 
         <StartCountdownButton disabled={isSubmitDisabled} type="submit">

@@ -12,6 +12,7 @@ import {
   StartCountdownButton,
   TaskInput,
 } from "./styles";
+import { useState } from "react";
 
 // controlled vs uncontrolled
 
@@ -48,7 +49,17 @@ const newCycleFormValidationSchema = zod.object({
 
 type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema>;
 
+interface Cycle {
+  id: string;
+  task: string;
+  minutesAmount: number;
+  // isActive: boolean
+}
+
 export function Home() {
+  const [cycles, setCycles] = useState<Cycle[]>([]);
+  const [activeCycleId, setActiveCycleId] = useState<string | null>(null);
+
   const { register, handleSubmit, watch, reset /*, formState*/ } =
     useForm<NewCycleFormData>({
       resolver: zodResolver(newCycleFormValidationSchema),
@@ -59,11 +70,23 @@ export function Home() {
     });
 
   function handleCreateNewCycle(data: NewCycleFormData) {
+    const newCycle: Cycle = {
+      id: String(new Date().getTime()),
+      task: data.task,
+      minutesAmount: data.minutesAmount,
+    };
+
+    // setCycles([...cycles, newCycle]);
+    setCycles((state) => [...state, newCycle]); // Clojure no React
+    setActiveCycleId(newCycle.id);
+
     console.log(data);
     reset();
   }
 
   // console.log(formState.errors);
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId);
+  console.log("activeCycle", activeCycle);
 
   const task = watch("task");
   const isSubmitDisabled = !task;

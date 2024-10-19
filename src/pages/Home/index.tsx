@@ -47,7 +47,6 @@ const newCycleFormValidationSchema = zod.object({
 //   task: string;
 //   minutesAmount: number;
 // }
-
 type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema>;
 
 interface Cycle {
@@ -77,13 +76,19 @@ export function Home() {
   // console.log("activeCycle", activeCycle);
 
   useEffect(() => {
+    let interval: number;
+
     if (foundAnActiveCycle) {
-      setInterval(() => {
+      interval = setInterval(() => {
         // setAmountSecondsPassed((state) => state + 1); ASSIM NÃO É PRECISO
         setAmountSecondsPassed(
           differenceInSeconds(new Date(), activeCycle.startDate)
         );
       }, 1000);
+
+      return () => {
+        clearInterval(interval);
+      };
     }
   }, [activeCycle, foundAnActiveCycle]);
 
@@ -98,6 +103,7 @@ export function Home() {
     // setCycles([...cycles, newCycle]);
     setCycles((state) => [...state, newCycle]); // Clojure no React
     setActiveCycleId(newCycle.id);
+    setAmountSecondsPassed(0);
 
     // console.log(data);
     reset();
@@ -117,6 +123,16 @@ export function Home() {
     2,
     "0"
   );
+
+  useEffect(() => {
+    if (foundAnActiveCycle) {
+      document.title = `${numberOfMinutesToShowOnScreen}:${numberOfSecondsToShowOnScreen}`;
+    }
+  }, [
+    foundAnActiveCycle,
+    numberOfMinutesToShowOnScreen,
+    numberOfSecondsToShowOnScreen,
+  ]);
 
   const task = watch("task");
   const isSubmitDisabled = !task;

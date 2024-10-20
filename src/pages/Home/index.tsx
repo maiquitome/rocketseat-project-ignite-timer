@@ -56,6 +56,7 @@ interface Cycle {
   minutesAmount: number;
   startDate: Date;
   interruptedDate?: Date;
+  finishedDate?: Date;
   // isActive: boolean
 }
 
@@ -77,22 +78,44 @@ export function Home() {
   const foundAnActiveCycle = activeCycle !== undefined;
   // console.log("activeCycle", activeCycle);
 
+  const totalSeconds = foundAnActiveCycle ? activeCycle.minutesAmount * 60 : 0;
+
   useEffect(() => {
     let interval: number;
 
     if (foundAnActiveCycle) {
       interval = setInterval(() => {
         // setAmountSecondsPassed((state) => state + 1); ASSIM NÃO É PRECISO
-        setAmountSecondsPassed(
-          differenceInSeconds(new Date(), activeCycle.startDate)
+        const secondsDifference = differenceInSeconds(
+          new Date(),
+          activeCycle.startDate
         );
+
+        const isCycleCompleted = secondsDifference >= totalSeconds;
+
+        if (isCycleCompleted) {
+          setCycles((state) => {
+            return state.map((cycle) => {
+              if (cycle.id === activeCycleId) {
+                return { ...cycle, finishedDate: new Date() };
+              } else {
+                return cycle;
+              }
+            });
+          });
+
+          setAmountSecondsPassed(totalSeconds);
+          clearInterval(interval);
+        } else {
+          setAmountSecondsPassed(secondsDifference);
+        }
       }, 1000);
 
       return () => {
         clearInterval(interval);
       };
     }
-  }, [activeCycle, foundAnActiveCycle]);
+  }, [activeCycle, foundAnActiveCycle, totalSeconds, activeCycleId]);
 
   function handleCreateNewCycle(data: NewCycleFormData) {
     const newCycle: Cycle = {
@@ -112,8 +135,8 @@ export function Home() {
   }
 
   function handleInterruptCycle() {
-    setCycles(
-      cycles.map((cycle) => {
+    setCycles((state) =>
+      state.map((cycle) => {
         if (cycle.id === activeCycleId) {
           return { ...cycle, interruptedDate: new Date() };
         } else {
@@ -126,7 +149,6 @@ export function Home() {
   }
 
   // console.log(formState.errors);
-  const totalSeconds = foundAnActiveCycle ? activeCycle.minutesAmount * 60 : 0;
   const currentSeconds = foundAnActiveCycle
     ? totalSeconds - amountSecondsPassed
     : 0;

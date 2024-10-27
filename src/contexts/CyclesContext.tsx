@@ -1,4 +1,10 @@
-import { createContext, ReactNode, useReducer, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useEffect,
+  useReducer,
+  useState,
+} from "react";
 import { Cycle, cyclesReducer } from "../reducers/cycles/reducer";
 import {
   addNewCycleAction,
@@ -38,6 +44,12 @@ export function CyclesContextProvider({
 
   // const [activeCycleId, setActiveCycleId] = useState<string | null>(null);
   const [amountSecondsPassed, setAmountSecondsPassed] = useState(0);
+
+  useEffect(() => {
+    const stateJSON = JSON.stringify(cyclesState);
+
+    localStorage.setItem("@ignite-timer:cycles-state-1.0.0", stateJSON);
+  }, [cyclesState]);
 
   const { cycles, activeCycleId } = cyclesState;
 
